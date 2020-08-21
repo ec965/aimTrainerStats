@@ -17,32 +17,10 @@ logging.propagate = False
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 class gSheet:
-    def __init__(self, title:str):
+    def __init__(self, title:str, service):
         self.title = title
-        self.service = self.createLogin()
-        self.ID = self.getID()
-
-    def createLogin(self):
-        creds = None
-        # The file token.pickle stores the user's access and refresh tokens, and is
-        # created automatically when the authorization flow completes for the first
-        # time.
-        if os.path.exists('token.pickle'):
-            with open('token.pickle', 'rb') as token:
-                creds = pickle.load(token)
-        # If there are no (valid) credentials available, let the user log in.
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', SCOPES)
-                creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open('token.pickle', 'wb') as token:
-                pickle.dump(creds, token)
-
-        return build('sheets', 'v4', credentials=creds)
+        self.service = service #service that has the auth keys etc.
+        self.ID = self.getID() #spreadsheetId
 
     def createNewSpreadsheet(self, title:str)->str:
         #create a new spreadsheet
@@ -74,8 +52,8 @@ class gSheet:
 
 # ChallengeSheet child for creating and editing sheets based on challenge data
 class ChallengeSheet(gSheet):
-    def __init__(self, title:str, challenges:Dict):
-        super().__init__(title)
+    def __init__(self, service, title:str, challenges:Dict):
+        super().__init__(title, service)
         self.challenges = challenges
         self.spreadsheetRequests =[]
         self.valueRequests=[]
@@ -112,8 +90,6 @@ class ChallengeSheet(gSheet):
     def createSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
         # hash the title to get the sheetId
         sheetId = self.myHash(title)
-        logging.warning('sheetId')
-        logging.warning(sheetId)
 
         # generate the cell values
         values = [['Date-Time', 'Challenge', 'Score', 'Accuracy', 'Sensitivity', 'Game Sens']]
