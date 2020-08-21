@@ -49,12 +49,13 @@ class Challenge :
         print('sens: ', self.sens)
 
 class Challenges:
-    def __init__(self, directory, playlist=[]):
+    def __init__(self, directory, playlist:Set={}):
         self.directory = directory
         self.data = self.getChallenges(self.directory, playlist)
 
     # User has option to specify playlist, if no playlist is specified, all data will be loaded
-    def getChallenges(self, directory:str, playlist:List=[])->Dict[str, List[Challenge]]:
+    def getChallenges(self, directory:str, playlist:Set={})->Dict[str, List[Challenge]]:
+        #create an empty dictionary to store challenges in
         challenges = {}
         for filename in os.listdir(directory):
             if filename.endswith(".csv") :
@@ -67,6 +68,8 @@ class Challenges:
                 if (len(playlist)==0) or (namePieces[0] in playlist):
                     #split the time based on the delimiter
                     timePieces = namePieces[-1].split('-')
+                    timePieces[0] = timePieces[0].replace('.', '/')
+                    timePieces[1] = timePieces[1].replace('.', ':')
 
                     challenge = Challenge(os.path.join(directory, filename), namePieces[0], timePieces[0], timePieces[1])
 
@@ -92,4 +95,4 @@ if __name__ == "__main__" :
     ch = Challenges(statsDir)
 
     for key, value in ch.challengeDict.items():
-        print(key, '\n', len(value))
+        print(key, '\n', value)

@@ -20,11 +20,12 @@ def main ():
     elif platform == "win32":
         steamLib = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
 
+    # dictionary { str: {Set}}
     playLists = {
-        'Flicks' : ['Tile Frenzy', 'Tile Frenzy Mini', '1wall6targets TE', '1wall 6targets small', 'Valorant Microshot Speed Small 60s', 'Valorant Reflex Flick'],
-        'Tracking': ['patTargetSwitch', 'Midrange Long Strafes Invincible', 'Cata IC Long Strafes', 'Cata IC Fast Strafes', '1wall5targets_pasu', 'patTargetSwitch V2']
+        'Flicks' : {'Tile Frenzy', 'Tile Frenzy Mini', '1wall6targets TE', '1wall 6targets small', 'Valorant Microshot Speed Small 60s', 'Valorant Reflex Flick'},
+        'Tracking': {'patTargetSwitch', 'Midrange Long Strafes Invincible', 'Cata IC Long Strafes', 'Cata IC Fast Strafes', '1wall5targets_pasu', 'patTargetSwitch V2'}
     }
-    
+
     for title, playlist in playLists.items() :
         kovaakData = Ch.Challenges(steamLib, playlist)
         kovaakGoogleSheet = ChallengeSheet(title, kovaakData.data)

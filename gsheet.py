@@ -120,7 +120,7 @@ class ChallengeSheet(gSheet):
 
         for challenge in challenges :
             values.append([
-                challenge.date+'-'+challenge.time,
+                challenge.date+' '+challenge.time,
                 challenge.name,
                 challenge.score,
                 challenge.accuracy,
