@@ -1,7 +1,7 @@
 import csv
 from sys import platform
 import os
-from typing import Dict, List
+from typing import Dict, List, Set
 
 class Challenge :
     def __init__(self, filePath, name, date, time) :
@@ -49,25 +49,30 @@ class Challenge :
         print('sens: ', self.sens)
 
 class Challenges:
-    def __init__(self, directory):
+    def __init__(self, directory, playlist=[]):
         self.directory = directory
-        self.challengeDict = self.getChallenges(self.directory)
-    def getChallenges(self, directory:str)->Dict[str, List[Challenge]]:
+        self.data = self.getChallenges(self.directory, playlist)
+
+    # User has option to specify playlist, if no playlist is specified, all data will be loaded
+    def getChallenges(self, directory:str, playlist:List=[])->Dict[str, List[Challenge]]:
         challenges = {}
         for filename in os.listdir(directory):
             if filename.endswith(".csv") :
                 #trim ' Stats.csv' suffix
                 #split pieces of the name by the delimiter
                 namePieces = filename[0:-10].split(' - ')
-                
-                #split the time based on the delimiter
-                timePieces = namePieces[-1].split('-')
+                namePieces[0] = namePieces[0].lstrip()#remove forward spaces
+                namePieces[0] = namePieces[0].rstrip() #remove trailing spaces
 
-                challenge = Challenge(os.path.join(directory, filename), namePieces[0], timePieces[0], timePieces[1])
+                if (len(playlist)==0) or (namePieces[0] in playlist):
+                    #split the time based on the delimiter
+                    timePieces = namePieces[-1].split('-')
 
-                if namePieces[0] not in challenges :
-                    challenges[namePieces[0]] = []
-                challenges[namePieces[0]].append(challenge)
+                    challenge = Challenge(os.path.join(directory, filename), namePieces[0], timePieces[0], timePieces[1])
+
+                    if namePieces[0] not in challenges :
+                        challenges[namePieces[0]] = []
+                    challenges[namePieces[0]].append(challenge)
             else:
                 continue
         return challenges
@@ -83,7 +88,7 @@ if __name__ == "__main__" :
         statsDir = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
     elif platform == "win32":
         statsDir = 'C:\Program Files (x86)\Steam\steamapps\common\FPSAimTrainer\FPSAimTrainer\stats'
-    
+
     ch = Challenges(statsDir)
 
     for key, value in ch.challengeDict.items():

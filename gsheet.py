@@ -11,7 +11,7 @@ import logging
 import hashlib
 
 logging.basicConfig(level=logging.WARNING)
-logging.propagate = True
+logging.propagate = False
 
 #give the app read and write privilege
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -56,19 +56,19 @@ class gSheet:
 
         ID = spreadsheet.get('spreadsheetId')
         #write the spread sheet ID to JSON
-        sheetJSON = {"ID": ID}
-        with open('spreadsheet.json', 'w') as json_file:
-            json.dump(sheetJSON, json_file)
+        # sheetJSON = {"ID": ID}
+        # with open('spreadsheet.json', 'w') as json_file:
+        #     json.dump(sheetJSON, json_file)
 
         return ID
 
     def getID(self)->str:
         #check if the spread sheet exists...
-        if os.path.exists('spreadsheet.json') :
-            with open('spreadsheet.json') as file:
-                data = json.load(file)
-            if data['ID'] :
-                return data['ID']
+        # if os.path.exists('spreadsheet.json') :
+        #     with open('spreadsheet.json') as file:
+        #         data = json.load(file)
+        #     if data['ID'] :
+        #         return data['ID']
         #else create a new spreadsheet
         return self.createNewSpreadsheet(self.title)
 
@@ -83,7 +83,7 @@ class ChallengeSheet(gSheet):
     # used to get the sheetId from the title
     def myHash(self, string:str)->int:
         return int( hashlib.sha1( string.encode('utf-8') ).hexdigest(),base=16 ) % (10**8) #generate sheetId by hashing title
-    
+
     def sendRequests(self):
         #send spreadsheet requests
         if len(self.spreadsheetRequests) > 0 :
@@ -95,11 +95,10 @@ class ChallengeSheet(gSheet):
             response = self.service.spreadsheets().batchUpdate(spreadsheetId=self.ID, body=body).execute()
             print(response)
             self.spreadsheetRequests=[] #reset requests list after sending API call
-        
         #send value update requests
         if len(self.valueRequests) > 0 :
             body={
-                'valueInputOption': 'USER_ENTERED', 
+                'valueInputOption': 'USER_ENTERED',
                 'data':self.valueRequests
             }
             logging.warning('sending value batch update:\n')
@@ -110,18 +109,18 @@ class ChallengeSheet(gSheet):
 
     # this should take in a dictionary key value pair.
     # the key is the title while the value is a list of challenges
-    def createSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]): 
+    def createSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
         # hash the title to get the sheetId
         sheetId = self.myHash(title)
         logging.warning('sheetId')
         logging.warning(sheetId)
-        
+
         # generate the cell values
-        values = [['Date/Time', 'Challenge', 'Score', 'Accuracy', 'Sensitivity', 'Game Sens']]
+        values = [['Date-Time', 'Challenge', 'Score', 'Accuracy', 'Sensitivity', 'Game Sens']]
 
         for challenge in challenges :
             values.append([
-                challenge.date+' '+challenge.time,
+                challenge.date+'-'+challenge.time,
                 challenge.name,
                 challenge.score,
                 challenge.accuracy,
@@ -141,23 +140,36 @@ class ChallengeSheet(gSheet):
                 }
             }
         })
-            
-        #make a chart
+
+        #make a score chart
         self.spreadsheetRequests.append({
             'addChart':{
                 'chart':{
-                    'chartId': 0,
+                    'chartId': sheetId+1,
                     'spec': {
-                        'title': title,
+                        'title': title+' Score',
                         'basicChart': {
                             'chartType': 'LINE',
+                            'axis': [
+                                {
+                                    'position': 'BOTTOM_AXIS',
+                                    'title': 'Date/Time',
+                                },
+                                {
+                                    'position': 'LEFT_AXIS',
+                                    'title': 'Score'
+                                }
+                            ],
                             'domains': [
                                 {
                                     'domain':{
                                         'sourceRange': {
                                             'sources': [
                                                 {
-                                                    title+'!A1:A'
+                                                    'sheetId': sheetId,
+                                                    'startRowIndex': 1,
+                                                    'startColumnIndex':0,
+                                                    'endColumnIndex':1
                                                 }
                                             ]
                                         }
@@ -169,29 +181,89 @@ class ChallengeSheet(gSheet):
                                     'series': {
                                         'sourceRange' : {
                                             'sources':{
-                                                title+'!D1:D'
+                                                'sheetId': sheetId,
+                                                'startRowIndex': 1,
+                                                'startColumnIndex':2,
+                                                'endColumnIndex':3
                                             }
                                         }
-                                    }
-                                },
-                                {
-                                    'series': {
-                                        'sourceRange' : {
-                                            'sources':{
-                                                title+'!C1:C'
-                                            }
-                                        }
-                                    }
+                                    },
+                                    'targetAxis': 'LEFT_AXIS'
                                 }
                             ]
                         }
                     },
                     "position": {
-                        'sheetId': sheetId,
                         'overlayPosition' :{
                             'anchorCell':{
                                 'sheetId': sheetId,
                                 'rowIndex': 0,
+                                'columnIndex': len(values[0])
+                            }
+                        }
+                    }
+
+                }
+            }
+        })
+
+        #make accuracy chart
+        self.spreadsheetRequests.append({
+            'addChart':{
+                'chart':{
+                    'chartId': sheetId+2,
+                    'spec': {
+                        'title': title+' Accuracy',
+                        'basicChart': {
+                            'chartType': 'LINE',
+                            'axis': [
+                                {
+                                    'position': 'BOTTOM_AXIS',
+                                    'title': 'Date/Time',
+                                },
+                                {
+                                    'position': 'LEFT_AXIS',
+                                    'title': 'Accuracy'
+                                }
+                            ],
+                            'domains': [
+                                {
+                                    'domain':{
+                                        'sourceRange': {
+                                            'sources': [
+                                                {
+                                                    'sheetId': sheetId,
+                                                    'startRowIndex': 1,
+                                                    'startColumnIndex':0,
+                                                    'endColumnIndex':1
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            'series': [
+                                {
+                                    'series': {
+                                        'sourceRange' : {
+                                            'sources':{
+                                                'sheetId': sheetId,
+                                                'startRowIndex': 1,
+                                                'startColumnIndex':3,
+                                                'endColumnIndex':4
+                                            }
+                                        }
+                                    },
+                                    'targetAxis': 'LEFT_AXIS'
+                                }
+                            ]
+                        }
+                    },
+                    "position": {
+                        'overlayPosition' :{
+                            'anchorCell':{
+                                'sheetId': sheetId,
+                                'rowIndex': 20,
                                 'columnIndex': len(values[0])
                             }
                         }
