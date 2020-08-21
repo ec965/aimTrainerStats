@@ -5,48 +5,48 @@ from typing import Dict, List
 
 class Challenge :
     def __init__(self, filePath, name, date, time) :
-        self.__filePath = filePath
-        self.__name = name
-        self.__date = date
-        self.__time = time
+        self.filePath = filePath
+        self.name = name
+        self.date = date
+        self.time = time
 
-        self.__score = 0
-        self.__accuracy = 0
-        self.__sensGame = ""
-        self.__sens = 0
+        self.score = 0
+        self.accuracy = 0
+        self.sensGame = "empty"
+        self.sens = 0
         self.getStats()
         # print("")
         # self.printVars()
 
     def getStats(self):
-        with open(self.__filePath, newline='') as csvfile:
+        with open(self.filePath, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             prevRow = ''
             for row in reader:
                 if len(row) : #check if row exists
                     if row[0] == 'Score:' : #look for the score row
-                        self.__score = row[1]
+                        self.score = row[1]
                     if len(prevRow): #check the previous row for the shots/hits categories
                         if prevRow[0] == 'Weapon' :
                             try:
-                                self.__accuracy = round(float(row[2]) / float(row [1]),5)
+                                self.accuracy = round(float(row[2]) / float(row [1]),5)
                             except:
-                                self.__accuracy = "undefined"
+                                self.accuracy = "undefined"
                     if row[0] == 'Sens Scale:' :
-                        self.__sensGame = row[1]
+                        self.sensGame = row[1]
                     if row[0] == 'Horiz Sens:' :
-                        self.__sens = row[1]
+                        self.sens = row[1]
                 prevRow = row #update previous row
 
     def printVars(self):
-        print('filePath: ',self.__filePath)
-        print('name: ',self.__name)
-        print('date: ',self.__date)
-        print('time: ',self.__time)
-        print('score: ', self.__score)
-        print('accuracy: ', self.__accuracy)
-        print('sens (game): ', self.__sensGame)
-        print('sens: ', self.__sens)
+        print('filePath: ',self.filePath)
+        print('name: ',self.name)
+        print('date: ',self.date)
+        print('time: ',self.time)
+        print('score: ', self.score)
+        print('accuracy: ', self.accuracy)
+        print('sens (game): ', self.sensGame)
+        print('sens: ', self.sens)
 
 class Challenges:
     def __init__(self, directory):
@@ -59,6 +59,7 @@ class Challenges:
                 #trim ' Stats.csv' suffix
                 #split pieces of the name by the delimiter
                 namePieces = filename[0:-10].split(' - ')
+                
                 #split the time based on the delimiter
                 timePieces = namePieces[-1].split('-')
 
@@ -71,12 +72,13 @@ class Challenges:
                 continue
         return challenges
 
-    def checkNew(self):
+    # def checkNew(self):
 
 
 
 if __name__ == "__main__" :
     #change path based on OS; maybe put this into args later
+
     if platform == "linux" or platform =="linux2":
         statsDir = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
     elif platform == "win32":
