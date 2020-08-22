@@ -49,14 +49,16 @@ class Challenge :
         print('sens: ', self.sens)
 
 class Challenges:
-    def __init__(self, directory, playlist:Set={}):
-        self.__data = self.getChallenges(directory, playlist)
+    def __init__(self, directory, title:str, playlist:Set={}):
+        self.__data = self.initChallenges(directory, playlist)
+        self.__title = title
     def getData(self):
         return self.__data
     # User has option to specify playlist, if no playlist is specified, all data will be loaded
-    def getChallenges(self, directory:str, playlist:Set={})->Dict[str, List[Challenge]]:
+    def initChallenges(self, directory:str, playlist:Set={})->Dict[str, List[Challenge]]:
         #create an empty dictionary to store challenges in
         challenges = {}
+        checkedData = [] #list to record file names of checked data
         for filename in os.listdir(directory):
             if filename.endswith(".csv") :
                 #trim ' Stats.csv' suffix
@@ -66,6 +68,7 @@ class Challenges:
                 namePieces[0] = namePieces[0].rstrip() #remove trailing spaces
 
                 if (len(playlist)==0) or (namePieces[0] in playlist):
+
                     #split the time based on the delimiter
                     timePieces = namePieces[-1].split('-')
                     timePieces[0] = timePieces[0].replace('.', '/')
@@ -76,8 +79,15 @@ class Challenges:
                     if namePieces[0] not in challenges :
                         challenges[namePieces[0]] = []
                     challenges[namePieces[0]].append(challenge)
+                    checkedData.append(filename) #record file names of checked data
             else:
                 continue
+        #record that the challenge data has been processed into a local csv
+        with open(f"{self.__title}checkedData.csv", 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            for data in checkedData :
+                writer.writerow([data])
+
         return challenges
 
     # def checkNew(self):

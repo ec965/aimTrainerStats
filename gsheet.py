@@ -109,7 +109,7 @@ class ChallengeSheet(gSheet):
 
         for challenge in challenges :
             values.append([
-                challenge.date+' '+challenge.time,
+                challenge.date+'-'+challenge.time,
                 challenge.name,
                 challenge.score,
                 challenge.accuracy,
@@ -134,13 +134,12 @@ class ChallengeSheet(gSheet):
         self.spreadsheetRequests.append({
             'addChart':{
                 'chart':{
-                    'chartId': sheetId+1,
+                    'chartId': sheetId+3,
                     'spec': {
-                        'title': title+' Score',
+                        'title': title+' Score and Accuracy',
                         'basicChart': {
                             'chartType': 'LINE',
                             'legendPosition' : 'TOP_LEGEND',
-                            'aggregateType' : 'SUM',
                             'axis': [
                                 {
                                     'position': 'BOTTOM_AXIS',
@@ -152,7 +151,12 @@ class ChallengeSheet(gSheet):
                                 },
                                 {
                                     'position': 'RIGHT_AXIS',
-                                    'title': 'Accuracy'
+                                    'title': 'Accuracy',
+                                    'viewWindowOptions': {
+                                        'viewWindowMin': 0.0,
+                                        'viewWindowMax': 1.0,
+                                        'viewWindowMode': 'EXPLICIT'
+                                    }
                                 },
                             ],
                             'domains': [
@@ -206,7 +210,7 @@ class ChallengeSheet(gSheet):
                         'overlayPosition' :{
                             'anchorCell':{
                                 'sheetId': sheetId,
-                                'rowIndex': 0,
+                                'rowIndex': 40,
                                 'columnIndex': len(values[0])
                             }
                         }
@@ -224,7 +228,6 @@ class ChallengeSheet(gSheet):
                     'spec': {
                         'title': title+' Score',
                         'basicChart': {
-                            'aggregateType' : 'SUM',
                             'chartType': 'LINE',
                             'axis': [
                                 {
@@ -273,7 +276,7 @@ class ChallengeSheet(gSheet):
                         'overlayPosition' :{
                             'anchorCell':{
                                 'sheetId': sheetId,
-                                'rowIndex': 40,
+                                'rowIndex': 0,
                                 'columnIndex': len(values[0])
                             }
                         }
@@ -355,6 +358,9 @@ class ChallengeSheet(gSheet):
             'majorDimension': 'ROWS',
             'values' : values
         })
+
+    
+    def updateSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
 
 
 

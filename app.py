@@ -39,7 +39,7 @@ def main ():
     # create spreadsheets for each playlist
     for title, playlist in playLists.items() :
         # get the kovaak's data for the specific playlist from the steam library
-        kovaakData = Ch.Challenges(steamLib, playlist)
+        kovaakData = Ch.Challenges(steamLib, title, playlist)
 
         # create the spreadsheet for the playlist
         kovaakGoogleSheet = ChallengeSheet(googleService.get('sheet'), googleService.get('drive'), title, kovaakData.getData())
@@ -47,6 +47,8 @@ def main ():
         # create the requests to create the sheets (tabs) for each challenge in the playlist
         for index, (key, value) in enumerate(kovaakGoogleSheet.challenges.items()):
             kovaakGoogleSheet.createSheet(index, key, value)
+
+            break #remove after testing
 
         # execute requests to generate the sheets
         kovaakGoogleSheet.sendRequests()

@@ -1,4 +1,4 @@
-gdrivedata.csv
+*.csv
 token.pickle
 credentials.json
 
