@@ -14,8 +14,16 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapi
 class gService:
     def __init__(self):
         services = self.createLogin()
-        self.sheet = services['sheet']
-        self.drive = services['drive']
+        self.__sheet = services['sheet']
+        self.__drive = services['drive']
+
+    def get(self,string:str):
+        if (string == 'sheet'):
+            return self.__sheet
+        if (string == 'drive'):
+            return self.__drive
+        else :
+            return False
 
     def createLogin(self)->Dict:
         creds = None

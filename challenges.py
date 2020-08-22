@@ -14,11 +14,11 @@ class Challenge :
         self.accuracy = 0
         self.sensGame = "empty"
         self.sens = 0
-        self.getStats()
+        self.initStats()
         # print("")
         # self.printVars()
 
-    def getStats(self):
+    def initStats(self):
         with open(self.filePath, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             prevRow = ''
@@ -50,9 +50,9 @@ class Challenge :
 
 class Challenges:
     def __init__(self, directory, playlist:Set={}):
-        self.directory = directory
-        self.data = self.getChallenges(self.directory, playlist)
-
+        self.__data = self.getChallenges(directory, playlist)
+    def getData(self):
+        return self.__data
     # User has option to specify playlist, if no playlist is specified, all data will be loaded
     def getChallenges(self, directory:str, playlist:Set={})->Dict[str, List[Challenge]]:
         #create an empty dictionary to store challenges in

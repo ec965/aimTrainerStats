@@ -33,7 +33,7 @@ def main ():
     googleService = gService()
 
     #create the folder
-    kovaakFolder = gFolder(googleService.drive, folderName)
+    kovaakFolder = gFolder(googleService.get('drive'), folderName)
 
 
     # create spreadsheets for each playlist
@@ -42,7 +42,7 @@ def main ():
         kovaakData = Ch.Challenges(steamLib, playlist)
 
         # create the spreadsheet for the playlist
-        kovaakGoogleSheet = ChallengeSheet(googleService.sheet, googleService.drive, title, kovaakData.data)
+        kovaakGoogleSheet = ChallengeSheet(googleService.get('sheet'), googleService.get('drive'), title, kovaakData.getData())
 
         # create the requests to create the sheets (tabs) for each challenge in the playlist
         for index, (key, value) in enumerate(kovaakGoogleSheet.challenges.items()):
@@ -50,6 +50,12 @@ def main ():
 
         # execute requests to generate the sheets
         kovaakGoogleSheet.sendRequests()
+
+        # place created spreadsheet into folder
+        kovaakFolder.moveFileHere(kovaakGoogleSheet.ID)
+
+        break # for testing so we only generate one spreadsheet
+
 
 if __name__=="__main__":
     main()

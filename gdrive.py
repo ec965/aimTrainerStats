@@ -10,32 +10,27 @@ from gservice import gService
 import csv
 logging.basicConfig(level=logging.ERROR)
 
-#use this class to find a file or folder in your google drive
-class gFind:
-    #service should be google drive service
-    def __init__(self, service):
-        self.service = service
 
-    def findFile(self, fileName:str, fileID:str)->bool:
-        page_token = None
-        nameQuery = "name = '" + fileName + "'"
-        while True:
-            response = self.service.files().list(q=nameQuery,
-                                            spaces='drive',
-                                            fields='nextPageToken, files(id, name)',
-                                            pageToken=page_token).execute()
-            for file in response.get('files', []):
-                print( 'Found file\tname: ', file.get('name'), '\tid: ', file.get('id') )
-                if fileID == file.get('id'):
-                    return True
-            token = response.get('nextPageToken', None)
-            if page_token is None:
-                return False
+def findFile(driveService, fileName:str, fileID:str)->bool:
+    page_token = None
+    nameQuery = f"name = '{fileName}'"
+    while True:
+        response = driveService.files().list(q=nameQuery,
+                                        spaces='drive',
+                                        fields='nextPageToken, files(id, name)',
+                                        pageToken=page_token).execute()
+        for file in response.get('files', []):
+            print( 'Found file\tname: ', file.get('name'), '\tid: ', file.get('id') )
+            if fileID == file.get('id'):
+                return True
+        token = response.get('nextPageToken', None)
+        if page_token is None:
+            return False
 
-class gFolder(gFind):
+class gFolder:
     # service should be the google drive service
     def __init__(self, service, folderName):
-        super().__init__(service)
+        self.csvName = 'gdrivedata.csv'
         self.service = service
         self.folderName = folderName
         self.ID = self.getID(folderName)
@@ -52,7 +47,7 @@ class gFolder(gFind):
 
         ID = file.get('id')
         #write foldername and ID to csv
-        with open('gdrivedata.csv','a', newline='') as csvfile:
+        with open(self.csvName,'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow([self.folderName, ID])
 
@@ -63,15 +58,20 @@ class gFolder(gFind):
         print('looking for exisiting G-drive folder')
 
         #check if csv data file exists
-        if os.path.exists('gdrivedata.csv'):
-            with open('gdrivedata.csv', newline='') as csvfile:
+        if os.path.exists(self.csvName):
+            with open(self.csvName, newline='') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
                 for row in reader:
-                    if row[0] == folderName :
-                        print('exisiting folder found')
-                        return row[1]
-            print('no folderID in G-drive found')
+                    if row[0] == self.folderName :
+                        print('exisiting local folder data found')
+                        ID = row[1]
 
+                        #check google drive to verify that folder exists
+                        if findFile(self.service, folderName, ID) :
+                            print('existing G-drive folder found')
+                            return ID
+
+        print('no folderID in G-drive found')
         return self.createFolder(self.folderName)
 
     def moveFileHere( self, fileID:str ):
@@ -89,6 +89,5 @@ class gFolder(gFind):
 if __name__ == "__main__" :
     service = gService()
     folder = gFolder(service.drive, 'test1')
-    finder = gFind(service.drive)
 
-    print(finder.findFile('test1',folder.ID))
+    print(findFile('test1',folder.ID))

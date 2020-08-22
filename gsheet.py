@@ -12,19 +12,19 @@ from challenges import Challenge
 import logging
 import hashlib
 from gservice import gService
-from gdrive import gFind
+import gdrive
 
 logging.basicConfig(level=logging.ERROR)
 logging.propagate = False
 
 #give the app read and write privilege
 
-class gSheet(gFind):
-    def __init__(self, title:str, service, driveService):
-        super().__init__(driveService)
+class gSheet:
+    def __init__(self, service, driveService, title:str):
+        self.csvName = 'gdrivedata.csv'
         self.title = title
         self.service = service #service that has the auth keys etc.
-        self.ID = self.getID() #spreadsheetId
+        self.ID = self.getID(driveService) #spreadsheetId
 
     def createNewSpreadsheet(self, title:str)->str:
         print('creating a new spreadsheet')
@@ -39,27 +39,36 @@ class gSheet(gFind):
         print(spreadsheet)
         ID = spreadsheet.get('spreadsheetId')
         #write the title and spread sheet ID to csv
-        with open('gdrivedata.csv', 'a', newline='') as csvfile:
+        with open(self.csvName, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=",")
             writer.writerow([self.title, ID])
 
         return ID
 
-    def getID(self)->str:
+    def getID(self, driveService)->str:
         #check if there is spreadsheet information on file
-        if os.path.exists('gdrivedata.csv'):
-            with open('gdrivedata.csv', newline='') as csvfile:
+        print('looking for exisitng G-drive spreadsheet')
+        if os.path.exists(self.csvName):
+            with open(self.csvName, newline='') as csvfile:
                 reader = csv.reader(csvfile,delimiter=',')
                 for row in reader:
-                    if row[0] == title :
-                        return row[1]
+                    if row[0] == self.title :
+                        print('exisitng local spreadsheet data found')
+                        ID = row[1]
+
+                        #check the google drive to verify if the spread sheet exists on the remote location
+                        if gdrive.findFile(driveService, self.title, ID):
+                            print('existing G-drive spreadsheet found')
+                            return ID
         #else create a new spreadsheet
+        print('no spreadsheet in G-drive found')
         return self.createNewSpreadsheet(self.title)
 
 # ChallengeSheet child for creating and editing sheets based on challenge data
 class ChallengeSheet(gSheet):
     def __init__(self, service, driveService, title:str, challenges:Dict):
-        super().__init__(title, service, driveService)
+        super().__init__(service, driveService, title)
+        self.csvName = 'gdrivedata.csv'
         self.challenges = challenges
         self.spreadsheetRequests =[]
         self.valueRequests=[]
@@ -120,6 +129,92 @@ class ChallengeSheet(gSheet):
                 }
             }
         })
+        
+        #make a combined chart
+        self.spreadsheetRequests.append({
+            'addChart':{
+                'chart':{
+                    'chartId': sheetId+1,
+                    'spec': {
+                        'title': title+' Score',
+                        'basicChart': {
+                            'chartType': 'LINE',
+                            'legendPosition' : 'TOP_LEGEND',
+                            'aggregateType' : 'SUM',
+                            'axis': [
+                                {
+                                    'position': 'BOTTOM_AXIS',
+                                    'title': 'Date/Time',
+                                },
+                                {
+                                    'position': 'LEFT_AXIS',
+                                    'title': 'Score'
+                                },
+                                {
+                                    'position': 'RIGHT_AXIS',
+                                    'title': 'Accuracy'
+                                },
+                            ],
+                            'domains': [
+                                {
+                                    'domain':{
+                                        'sourceRange': {
+                                            'sources': [
+                                                {
+                                                    'sheetId': sheetId,
+                                                    'startRowIndex': 0,
+                                                    'startColumnIndex':0,
+                                                    'endColumnIndex':1
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            'series': [
+                                {
+                                    'series': {
+                                        'sourceRange' : {
+                                            'sources':{
+                                                'sheetId': sheetId,
+                                                'startRowIndex': 0,
+                                                'startColumnIndex':2,
+                                                'endColumnIndex':3
+                                            }
+                                        }
+                                    },
+                                    'targetAxis': 'LEFT_AXIS'
+                                },
+                                {
+                                    'series': {
+                                        'sourceRange' : {
+                                            'sources':{
+                                                'sheetId': sheetId,
+                                                'startRowIndex': 0,
+                                                'startColumnIndex':3,
+                                                'endColumnIndex':4
+                                            }
+                                        }
+                                    },
+                                    'targetAxis': 'RIGHT_AXIS'
+                                }
+                            ],
+                            'headerCount': 1
+                        }
+                    },
+                    "position": {
+                        'overlayPosition' :{
+                            'anchorCell':{
+                                'sheetId': sheetId,
+                                'rowIndex': 0,
+                                'columnIndex': len(values[0])
+                            }
+                        }
+                    }
+
+                }
+            }
+        })
 
         #make a score chart
         self.spreadsheetRequests.append({
@@ -129,6 +224,7 @@ class ChallengeSheet(gSheet):
                     'spec': {
                         'title': title+' Score',
                         'basicChart': {
+                            'aggregateType' : 'SUM',
                             'chartType': 'LINE',
                             'axis': [
                                 {
@@ -177,7 +273,7 @@ class ChallengeSheet(gSheet):
                         'overlayPosition' :{
                             'anchorCell':{
                                 'sheetId': sheetId,
-                                'rowIndex': 0,
+                                'rowIndex': 40,
                                 'columnIndex': len(values[0])
                             }
                         }
