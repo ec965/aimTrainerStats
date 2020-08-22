@@ -1,28 +1,33 @@
+# Google API
 from __future__ import print_function
 import pickle
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-import json
+#
+import csv
 from typing import Dict, List
 from challenges import Challenge
 import logging
 import hashlib
+from gservice import gService
+from gdrive import gFind
 
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.ERROR)
 logging.propagate = False
 
 #give the app read and write privilege
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
-class gSheet:
-    def __init__(self, title:str, service):
+class gSheet(gFind):
+    def __init__(self, title:str, service, driveService):
+        super().__init__(driveService)
         self.title = title
         self.service = service #service that has the auth keys etc.
         self.ID = self.getID() #spreadsheetId
 
     def createNewSpreadsheet(self, title:str)->str:
+        print('creating a new spreadsheet')
         #create a new spreadsheet
         spreadsheet = {
             'properties': {
@@ -31,29 +36,30 @@ class gSheet:
         }
         spreadsheet = self.service.spreadsheets().create(body=spreadsheet,
                                                     fields='spreadsheetId').execute()
-
+        print(spreadsheet)
         ID = spreadsheet.get('spreadsheetId')
-        #write the spread sheet ID to JSON
-        # sheetJSON = {"ID": ID}
-        # with open('spreadsheet.json', 'w') as json_file:
-        #     json.dump(sheetJSON, json_file)
+        #write the title and spread sheet ID to csv
+        with open('gdrivedata.csv', 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=",")
+            writer.writerow([self.title, ID])
 
         return ID
 
     def getID(self)->str:
-        #check if the spread sheet exists...
-        # if os.path.exists('spreadsheet.json') :
-        #     with open('spreadsheet.json') as file:
-        #         data = json.load(file)
-        #     if data['ID'] :
-        #         return data['ID']
+        #check if there is spreadsheet information on file
+        if os.path.exists('gdrivedata.csv'):
+            with open('gdrivedata.csv', newline='') as csvfile:
+                reader = csv.reader(csvfile,delimiter=',')
+                for row in reader:
+                    if row[0] == title :
+                        return row[1]
         #else create a new spreadsheet
         return self.createNewSpreadsheet(self.title)
 
 # ChallengeSheet child for creating and editing sheets based on challenge data
 class ChallengeSheet(gSheet):
-    def __init__(self, service, title:str, challenges:Dict):
-        super().__init__(title, service)
+    def __init__(self, service, driveService, title:str, challenges:Dict):
+        super().__init__(title, service, driveService)
         self.challenges = challenges
         self.spreadsheetRequests =[]
         self.valueRequests=[]
@@ -68,8 +74,7 @@ class ChallengeSheet(gSheet):
             body = {
                 'requests' : self.spreadsheetRequests
             }
-            logging.warning('sending spreadsheet batch update:\n')
-            logging.warning(body)
+            logging.info('sending spreadsheet batch update:\n', body)
             response = self.service.spreadsheets().batchUpdate(spreadsheetId=self.ID, body=body).execute()
             print(response)
             self.spreadsheetRequests=[] #reset requests list after sending API call
@@ -79,8 +84,7 @@ class ChallengeSheet(gSheet):
                 'valueInputOption': 'USER_ENTERED',
                 'data':self.valueRequests
             }
-            logging.warning('sending value batch update:\n')
-            logging.warning(body)
+            logging.info('sending value batch update:\n', body)
             response = self.service.spreadsheets().values().batchUpdate(spreadsheetId=self.ID, body=body).execute()
             print(response)
             self.valueRequests=[]
@@ -262,4 +266,5 @@ class ChallengeSheet(gSheet):
 
 
 if __name__ == '__main__':
-    sheet = gSheet('FPS Aim Trainer Stats')
+    googleService = gService()
+    sheet = gSheet('FPS Aim Trainer Stats', googleService.sheet)

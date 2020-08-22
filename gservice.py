@@ -6,12 +6,15 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from typing import Dict
 
+import logging
+logging.getLogger('googleapicliet.discovery_cache').setLevel(logging.ERROR)
+
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.file']
 
 class gService:
     def __init__(self):
         services = self.createLogin()
-        self.sheet = services['sheets']
+        self.sheet = services['sheet']
         self.drive = services['drive']
 
     def createLogin(self)->Dict:
@@ -33,8 +36,8 @@ class gService:
             # Save the credentials for the next run
             with open('token.pickle', 'wb') as token:
                 pickle.dump(creds, token)
-        
-        sheet = build('sheets', 'v4', credentials=creds)
-        drive = build('drive', 'v3', credentials=creds)
+
+        sheet = build('sheets', 'v4', credentials=creds, cache_discovery=False)
+        drive = build('drive', 'v3', credentials=creds, cache_discovery=False)
         services = {'sheet':sheet, 'drive':drive}
         return services

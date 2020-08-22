@@ -3,6 +3,7 @@ from gsheet import ChallengeSheet
 from sys import platform
 import logging
 from gservice import gService
+from gdrive import gFolder, findFile
 
 logging.basicConfig(level=logging.WARNING)
 logging.propagate = False
@@ -21,14 +22,19 @@ def main ():
     elif platform == "win32":
         steamLib = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
 
+    folderName = 'FPS Aim Trainer Stats'
     # dictionary { str: {Set}}
     playLists = {
         'Flicks' : {'Tile Frenzy', 'Tile Frenzy Mini', '1wall6targets TE', '1wall 6targets small', 'Valorant Microshot Speed Small 60s', 'Valorant Reflex Flick'},
         'Tracking': {'patTargetSwitch', 'Midrange Long Strafes Invincible', 'Cata IC Long Strafes', 'Cata IC Fast Strafes', '1wall5targets_pasu', 'patTargetSwitch V2'}
     }
-    
+
     # create the service for google drive and google sheet
     googleService = gService()
+
+    #create the folder
+    kovaakFolder = gFolder(googleService.drive, folderName)
+
 
     # create spreadsheets for each playlist
     for title, playlist in playLists.items() :
@@ -36,12 +42,12 @@ def main ():
         kovaakData = Ch.Challenges(steamLib, playlist)
 
         # create the spreadsheet for the playlist
-        kovaakGoogleSheet = ChallengeSheet(googleService.sheet, title, kovaakData.data)
-        
+        kovaakGoogleSheet = ChallengeSheet(googleService.sheet, googleService.drive, title, kovaakData.data)
+
         # create the requests to create the sheets (tabs) for each challenge in the playlist
         for index, (key, value) in enumerate(kovaakGoogleSheet.challenges.items()):
             kovaakGoogleSheet.createSheet(index, key, value)
-        
+
         # execute requests to generate the sheets
         kovaakGoogleSheet.sendRequests()
 
