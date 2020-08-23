@@ -31,6 +31,13 @@ class ChallengeSheet(myG.gsheet.gSheet):
     # used to get the sheetId from the title
     def myHash(self, string:str)->int:
         return int( hashlib.sha1( string.encode('utf-8') ).hexdigest(),base=16 ) % (10**8) #generate sheetId by hashing title
+    
+    def removeFirstSheet(self):
+        self.__spreadsheetRequests.append({
+            "deleteSheet":{
+                'sheetId': 0
+            }
+        })
 
     def sendRequests(self):
         #send spreadsheet requests
