@@ -23,6 +23,7 @@ class gSheet:
         self.__csvName = 'data/gdrivedata.csv'
         self.__title = title
         self._service = service #service that has the auth keys etc.
+        self._firstCreation = False
         self._ID = self.initID(driveService) #spreadsheetId
     
     def get(self, s:str):
@@ -30,8 +31,11 @@ class gSheet:
             return self._ID
         elif s=='title':
             return self.__title
+        elif s=='firstCreation':
+            return self._firstCreation
 
     def createNewSpreadsheet(self, title:str)->str:
+        self._firstCreation = True
         print('creating a new spreadsheet')
         #create a new spreadsheet
         spreadsheet = {

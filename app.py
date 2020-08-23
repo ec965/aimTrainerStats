@@ -24,7 +24,7 @@ def main ():
         steamLibStats = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
         steamLibPlaylist = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
     elif platform == "win32":
-        print("Please enter the path to your steam library. (It's probably \"C:/Program Files (x86)/Steam\" .)")
+        print("Please enter the path to your steam library.\nExample: C:/Program Files (x86)/Steam")
         steamPath = input()
         steamLibStats = steamPath + '/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
         steamLibPlaylist = steamPath + '/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
@@ -69,7 +69,6 @@ def main ():
     #create the folder
     kovaakFolder = gFolder(googleService.get('drive'), folderName)
 
-
     for title, playlist in inputPlaylists.items() :
         # get the kovaak's data for the specific playlist from the steam library
         #this function uses a csv file to track data that has already been input. It will only load new data.
@@ -81,9 +80,13 @@ def main ():
         # create the requests to create the sheets (tabs) for each challenge in the playlist
         for index, (title, data) in enumerate(kovaakGoogleSheet.getChallengeDict().items()):
             kovaakGoogleSheet.createSheet(index, title, data) #if the sheet already exists, this function will simply append new data
-        
+
+        # remove Sheet1 (default created sheet) if this is the first time the spreadsheet has been initialized
+        if kovaakGoogleSheet.get('firstCreation') :
+            kovaakGoogleSheet.removeFirstSheet()
+
         kovaakGoogleSheet.sendRequests()
-        
+
         # place created spreadsheet into folder
         kovaakFolder.moveFileHere(kovaakGoogleSheet.get('ID'))
 
