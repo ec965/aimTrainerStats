@@ -52,7 +52,7 @@ def main ():
         print(f"{pl}: {inputPlaylists[pl]}")
 
 
-    print('Would you like to start creating the google spreadsheet(s)? y/n')
+    print('Would you like to start creating/updating the google spreadsheet(s)? y/n')
     makeSheets = input()
     if not (makeSheets == 'y' or makeSheets == 'Y') :
         print('Existing App')
