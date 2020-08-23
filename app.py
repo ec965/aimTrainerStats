@@ -30,7 +30,12 @@ def main ():
     # get the playlists from the kovaak's game folder
     playlists = kovaak.playlist.getPlaylists(steamLibPlaylist)
     for i,pl in enumerate(playlists) :
-        print(f"{i}. {pl}\t{playlists[pl]}")
+        s = f"{i}. {pl}:\t["
+        for ch in playlists[pl] :
+            s += f"{ch}, "
+        s = s[:-2] + ']'
+        print(s)
+
     # get the useres input on which playlists to use 
     print('\nType the number of the playlist that you want to use to generate a google sheet.\nMultiple palylists can be selected, please seperate using a comma.\nExample: 0,1,13')
     selection = input()
@@ -62,23 +67,21 @@ def main ():
     kovaakFolder = gFolder(googleService.get('drive'), folderName)
 
 
-    # create spreadsheets for each playlist
     for title, playlist in inputPlaylists.items() :
         # get the kovaak's data for the specific playlist from the steam library
+        #this function uses a csv file to track data that has already been input. It will only load new data.
         kovaakData = Ch.Challenges(steamLibStats, title, playlist)
 
         # create the spreadsheet for the playlist
         kovaakGoogleSheet = ChallengeSheet(googleService.get('sheet'), googleService.get('drive'), title, kovaakData.getData())
 
         # create the requests to create the sheets (tabs) for each challenge in the playlist
-        for index, (key, value) in enumerate(kovaakGoogleSheet.challenges.items()):
-            kovaakGoogleSheet.createSheet(index, key, value)
-
-        # execute requests to generate the sheets
-        kovaakGoogleSheet.sendRequests()
+        for index, (title, data) in enumerate(kovaakGoogleSheet.getChallengeDict().items()):
+            kovaakGoogleSheet.createSheet(index, title, data) #if the sheet already exists, this function will simply append new data
+            kovaakGoogleSheet.sendRequests()
 
         # place created spreadsheet into folder
-        kovaakFolder.moveFileHere(kovaakGoogleSheet.ID)
+        kovaakFolder.moveFileHere(kovaakGoogleSheet.get('ID'))
 
 if __name__=="__main__":
     main()

@@ -5,48 +5,65 @@ from typing import Dict, List, Set
 
 class Challenge :
     def __init__(self, filePath, name, date, time) :
-        self.filePath = filePath
-        self.name = name
-        self.date = date
-        self.time = time
+        self.__filePath = filePath
+        self.__name = name
+        self.__date = date
+        self.__time = time
 
-        self.score = 0
-        self.accuracy = 0
-        self.sensGame = "empty"
-        self.sens = 0
+        self.__score = 0
+        self.__accuracy = 0
+        self.__sensGame = "empty"
+        self.__sens = 0
         self.initStats()
         # print("")
         # self.printVars()
+    def get(self, s:str):
+        if s=='name':
+            return self.__name
+        elif s=='date':
+            return self.__date
+        elif s=='time':
+            return self.__time
+        elif s=='score':
+            return self.__score
+        elif s=='accuracy':
+            return self.__accuracy
+        elif s=='sensGame':
+            return self.__sensGame
+        elif s=='sens':
+            return self.__sens
+        elif s=='filePath':
+            return self.__filePath
 
     def initStats(self):
-        with open(self.filePath, newline='') as csvfile:
+        with open(self.__filePath, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             prevRow = ''
             for row in reader:
                 if len(row) : #check if row exists
                     if row[0] == 'Score:' : #look for the score row
-                        self.score = row[1]
+                        self.__score = row[1]
                     if len(prevRow): #check the previous row for the shots/hits categories
                         if prevRow[0] == 'Weapon' :
                             try:
-                                self.accuracy = round(float(row[2]) / float(row [1]),5)
+                                self.__accuracy = round(float(row[2]) / float(row [1]),5)
                             except:
-                                self.accuracy = "undefined"
+                                self.__accuracy = "undefined"
                     if row[0] == 'Sens Scale:' :
-                        self.sensGame = row[1]
+                        self.__sensGame = row[1]
                     if row[0] == 'Horiz Sens:' :
-                        self.sens = row[1]
+                        self.__sens = row[1]
                 prevRow = row #update previous row
 
     def printVars(self):
-        print('filePath: ',self.filePath)
-        print('name: ',self.name)
-        print('date: ',self.date)
-        print('time: ',self.time)
-        print('score: ', self.score)
-        print('accuracy: ', self.accuracy)
-        print('sens (game): ', self.sensGame)
-        print('sens: ', self.sens)
+        print('filePath: ',self.__filePath)
+        print('name: ',self.__name)
+        print('date: ',self.__date)
+        print('time: ',self.__time)
+        print('score: ', self.__score)
+        print('accuracy: ', self.__accuracy)
+        print('sens (game): ', self.__sensGame)
+        print('sens: ', self.__sens)
 
 class Challenges:
     def __init__(self, directory, title:str="allData", playlist:Set={}):

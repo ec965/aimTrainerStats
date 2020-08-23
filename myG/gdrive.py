@@ -29,10 +29,16 @@ def findFile(driveService, fileName:str, fileID:str)->bool:
 class gFolder:
     # service should be the google drive service
     def __init__(self, service, folderName):
-        self.csvName = 'data/gdrivedata.csv'
-        self.service = service
-        self.folderName = folderName
-        self.ID = self.getID(folderName)
+        self.__csvName = 'data/gdrivedata.csv'
+        self.__service = service
+        self.__folderName = folderName
+        self.__ID = self.initID(folderName)
+    
+    def get(self, s:str):
+        if(s=='ID'):
+            return self.__ID
+        elif(s=='folderName'):
+            return self.__folderName
 
     def createFolder(self, folderName:str)->str:
         print('creating a new folder named:', folderName)
@@ -41,46 +47,46 @@ class gFolder:
             'mimeType': 'application/vnd.google-apps.folder'
         }
 
-        file = self.service.files().create(body=file_metadata, fields='id').execute()
+        file = self.__service.files().create(body=file_metadata, fields='id').execute()
         print(file)
 
         ID = file.get('id')
         #write foldername and ID to csv
-        with open(self.csvName,'a', newline='') as csvfile:
+        with open(self.__csvName,'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
-            writer.writerow([self.folderName, ID])
+            writer.writerow([self.__folderName, ID])
 
         return ID
 
-    def getID(self, folderName:str)->str :
+    def initID(self, folderName:str)->str :
         #check if there is folder data in the local csv
         print('looking for exisiting G-drive folder')
 
         #check if csv data file exists
-        if os.path.exists(self.csvName):
-            with open(self.csvName, newline='') as csvfile:
+        if os.path.exists(self.__csvName):
+            with open(self.__csvName, newline='') as csvfile:
                 reader = csv.reader(csvfile, delimiter=',')
                 for row in reader:
-                    if row[0] == self.folderName :
+                    if row[0] == self.__folderName :
                         print('exisiting local folder data found')
                         ID = row[1]
 
                         #check google drive to verify that folder exists
-                        if findFile(self.service, folderName, ID) :
+                        if findFile(self.__service, folderName, ID) :
                             print('existing G-drive folder found')
                             return ID
 
         print('no folderID in G-drive found')
-        return self.createFolder(self.folderName)
+        return self.createFolder(self.__folderName)
 
     def moveFileHere( self, fileID:str ):
         print('moving file: ', fileID)
         # get exisiting parents (file path) to remove
-        file = self.service.files().get(fileId=fileID, fields='parents').execute()
+        file = self.__service.files().get(fileId=fileID, fields='parents').execute()
         previousParents = ','.join(file.get('parents'))
         # move file to new folder
-        file = self.service.files().update(fileId=fileID,
-                                           addParents=self.ID,
+        file = self.__service.files().update(fileId=fileID,
+                                           addParents=self.__ID,
                                            removeParents=previousParents,
                                            fields='id, parents').execute()
 

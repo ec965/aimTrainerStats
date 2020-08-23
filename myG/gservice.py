@@ -49,3 +49,14 @@ class gService:
         drive = build('drive', 'v3', credentials=creds, cache_discovery=False)
         services = {'sheet':sheet, 'drive':drive}
         return services
+
+if __name__ == "__main__":
+    gs = gService()
+    spid='1V4D9epPWfQAAJGzUSkrR4L4O-4Y_dUQYFKMJkdDDWwM'
+    shmetadata = gs.get('sheet').spreadsheets().get(spreadsheetId=spid).execute()
+    sheets = shmetadata.get('sheets', '')
+    for s in sheets : 
+        title = s.get('properties', {}).get('title','no_title')
+        sheetid = s.get('properties',{}).get('sheetId','no_id')
+        print (f"{title}\t{sheetid}")
+        print('\n')

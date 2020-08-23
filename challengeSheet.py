@@ -21,10 +21,12 @@ logging.propagate = False
 class ChallengeSheet(myG.gsheet.gSheet):
     def __init__(self, service, driveService, title:str, challenges:Dict):
         super().__init__(service, driveService, title)
-        self.csvName = 'gdrivedata.csv'
-        self.challenges = challenges
-        self.spreadsheetRequests =[]
-        self.valueRequests=[]
+        self.__challenges = challenges
+        self.__spreadsheetRequests =[]
+        self.__valueRequests=[]
+    
+    def getChallengeDict(self) :
+        return self.__challenges
 
     # used to get the sheetId from the title
     def myHash(self, string:str)->int:
@@ -32,46 +34,87 @@ class ChallengeSheet(myG.gsheet.gSheet):
 
     def sendRequests(self):
         #send spreadsheet requests
-        if len(self.spreadsheetRequests) > 0 :
+        if len(self.__spreadsheetRequests) > 0 :
             body = {
-                'requests' : self.spreadsheetRequests
+                'requests' : self.__spreadsheetRequests
             }
             logging.info('sending spreadsheet batch update:\n', body)
-            response = self.service.spreadsheets().batchUpdate(spreadsheetId=self.ID, body=body).execute()
+            response = self._service.spreadsheets().batchUpdate(spreadsheetId=self._ID, body=body).execute()
             print(response)
-            self.spreadsheetRequests=[] #reset requests list after sending API call
+            self.__spreadsheetRequests=[] #reset requests list after sending API call
         #send value update requests
-        if len(self.valueRequests) > 0 :
+        if len(self.__valueRequests) > 0 :
             body={
                 'valueInputOption': 'USER_ENTERED',
-                'data':self.valueRequests
+                'data':self.__valueRequests
             }
             logging.info('sending value batch update:\n', body)
-            response = self.service.spreadsheets().values().batchUpdate(spreadsheetId=self.ID, body=body).execute()
+            response = self._service.spreadsheets().values().batchUpdate(spreadsheetId=self._ID, body=body).execute()
             print(response)
-            self.valueRequests=[]
+            self.__valueRequests=[]
+
+    def updateValues(self, title:str, challenges:List[Challenge]):
+        values = []
+        for challenge in challenges : 
+            values.append([
+                challenge.get('date')+'-'+challenge.get('time'),
+                challenge.get('name'),
+                challenge.get('score'),
+                challenge.get('accuracy'),
+                challenge.get('sens'),
+                challenge.get('sensGame')
+            ])
+
+        body = {'values': values}
+
+        result = self._service.spreadsheets().values().append( spreadsheetId=self._ID ,
+                                                            range=title,
+                                                            valueInputOption='USER_ENTERED',
+                                                            body=body).execute()
+        print(result)
+
 
     # this should take in a dictionary key value pair.
     # the key is the title while the value is a list of challenges
     def createSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
         # hash the title to get the sheetId
         sheetId = self.myHash(title)
+        
+        #check if the sheet already exists
+        sheetMetadata = self._service.spreadsheets().get(spreadsheetId=self._ID).execute()
+        currentSheets = sheetMetadata.get('sheets', '')
+        for s in currentSheets :
+            checkTitle = s.get('properties',{}).get('title','no_title')
+            checkID = s.get('properties',{}).get('sheetId','no_id')
+            if checkTitle == title:
+                if checkID == sheetId:
+                    self.updateValues(title, challenges) #update values if sheet already exists
+                    return #exit function if sheet already exists
 
         # generate the cell values
         values = [['Date-Time', 'Challenge', 'Score', 'Accuracy', 'Sensitivity', 'Game Sens']]
 
         for challenge in challenges :
             values.append([
-                challenge.date+'-'+challenge.time,
-                challenge.name,
-                challenge.score,
-                challenge.accuracy,
-                challenge.sens,
-                challenge.sensGame
+                challenge.get('date')+'-'+challenge.get('time'),
+                challenge.get('name'),
+                challenge.get('score'),
+                challenge.get('accuracy'),
+                challenge.get('sens'),
+                challenge.get('sensGame')
             ])
 
+        # add the value data to the table
+        self.__valueRequests.append({
+            'range': title,
+            'majorDimension': 'ROWS',
+            'values' : values
+        })
+
+        #number of columns from left to anchor the chart
+        chartOffset = len(values[0])
         #create the sheet
-        self.spreadsheetRequests.append({
+        self.__spreadsheetRequests.append({
             'addSheet' : {
                 'properties': {
                     "sheetId" : sheetId,
@@ -84,7 +127,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
         })
         
         #make a combined chart
-        self.spreadsheetRequests.append({
+        self.__spreadsheetRequests.append({
             'addChart':{
                 'chart':{
                     'chartId': sheetId+3,
@@ -164,7 +207,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
                             'anchorCell':{
                                 'sheetId': sheetId,
                                 'rowIndex': 40,
-                                'columnIndex': len(values[0])
+                                'columnIndex': chartOffset
                             }
                         }
                     }
@@ -174,7 +217,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
         })
 
         #make a score chart
-        self.spreadsheetRequests.append({
+        self.__spreadsheetRequests.append({
             'addChart':{
                 'chart':{
                     'chartId': sheetId+1,
@@ -230,7 +273,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
                             'anchorCell':{
                                 'sheetId': sheetId,
                                 'rowIndex': 0,
-                                'columnIndex': len(values[0])
+                                'columnIndex': chartOffset
                             }
                         }
                     }
@@ -240,7 +283,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
         })
 
         #make accuracy chart
-        self.spreadsheetRequests.append({
+        self.__spreadsheetRequests.append({
             'addChart':{
                 'chart':{
                     'chartId': sheetId+2,
@@ -296,7 +339,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
                             'anchorCell':{
                                 'sheetId': sheetId,
                                 'rowIndex': 20,
-                                'columnIndex': len(values[0])
+                                'columnIndex': chartOffset
                             }
                         }
                     }
@@ -305,13 +348,5 @@ class ChallengeSheet(myG.gsheet.gSheet):
             }
         })
 
-        # add the value data to the table
-        self.valueRequests.append({
-            'range': title,
-            'majorDimension': 'ROWS',
-            'values' : values
-        })
 
-    
-    # def updateSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
-
+        

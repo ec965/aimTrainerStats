@@ -20,10 +20,16 @@ logging.propagate = False
 
 class gSheet:
     def __init__(self, service, driveService, title:str):
-        self.csvName = 'data/gdrivedata.csv'
-        self.title = title
-        self.service = service #service that has the auth keys etc.
-        self.ID = self.getID(driveService) #spreadsheetId
+        self.__csvName = 'data/gdrivedata.csv'
+        self.__title = title
+        self._service = service #service that has the auth keys etc.
+        self._ID = self.initID(driveService) #spreadsheetId
+    
+    def get(self, s:str):
+        if s=='ID':
+            return self._ID
+        elif s=='title':
+            return self.__title
 
     def createNewSpreadsheet(self, title:str)->str:
         print('creating a new spreadsheet')
@@ -33,35 +39,35 @@ class gSheet:
                 'title': title
             }
         }
-        spreadsheet = self.service.spreadsheets().create(body=spreadsheet,
+        spreadsheet = self._service.spreadsheets().create(body=spreadsheet,
                                                     fields='spreadsheetId').execute()
         print(spreadsheet)
         ID = spreadsheet.get('spreadsheetId')
         #write the title and spread sheet ID to csv
-        with open(self.csvName, 'a', newline='') as csvfile:
+        with open(self.__csvName, 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=",")
-            writer.writerow([self.title, ID])
+            writer.writerow([self.__title, ID])
 
         return ID
 
-    def getID(self, driveService)->str:
+    def initID(self, driveService)->str:
         #check if there is spreadsheet information on file
         print('looking for exisitng G-drive spreadsheet')
-        if os.path.exists(self.csvName):
-            with open(self.csvName, newline='') as csvfile:
+        if os.path.exists(self.__csvName):
+            with open(self.__csvName, newline='') as csvfile:
                 reader = csv.reader(csvfile,delimiter=',')
                 for row in reader:
-                    if row[0] == self.title :
+                    if row[0] == self.__title :
                         print('exisitng local spreadsheet data found')
                         ID = row[1]
 
                         #check the google drive to verify if the spread sheet exists on the remote location
-                        if myG.gdrive.findFile(driveService, self.title, ID):
+                        if myG.gdrive.findFile(driveService, self.__title, ID):
                             print('existing G-drive spreadsheet found')
                             return ID
         #else create a new spreadsheet
         print('no spreadsheet in G-drive found')
-        return self.createNewSpreadsheet(self.title)
+        return self.createNewSpreadsheet(self.__title)
 
 if __name__ == '__main__':
     googleService = gService()

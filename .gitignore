@@ -6,3 +6,5 @@ data/*
 __pychache__/
 kovaak/__pycache__/
 myG/__pycache__/
+myG/credentials.json
+myG/token.pickle
