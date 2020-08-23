@@ -3,6 +3,7 @@ token.pickle
 credentials.json
 data/*
 
+__pychache__/*
 __pychache__/
 kovaak/__pycache__/
 myG/__pycache__/
