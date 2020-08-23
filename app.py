@@ -20,11 +20,14 @@ def main ():
     #change path based on OS; maybe put this into args later
     logging.warning('current OS: ', platform)
     if platform == "linux" or platform =="linux2":
+        print('you use wsl? gtfo outta here, this is for devs only!!')
         steamLibStats = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
         steamLibPlaylist = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
     elif platform == "win32":
-        steamLibStats = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
-        steamLibPlaylist = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
+        print("Please enter the path to your steam library. (It's probably \"C:/Program Files (x86)/Steam\" .)")
+        steamPath = input()
+        steamLibStats = steamPath + '/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
+        steamLibPlaylist = steamPath + '/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
 
 
     # get the playlists from the kovaak's game folder
@@ -78,8 +81,9 @@ def main ():
         # create the requests to create the sheets (tabs) for each challenge in the playlist
         for index, (title, data) in enumerate(kovaakGoogleSheet.getChallengeDict().items()):
             kovaakGoogleSheet.createSheet(index, title, data) #if the sheet already exists, this function will simply append new data
-            kovaakGoogleSheet.sendRequests()
-
+        
+        kovaakGoogleSheet.sendRequests()
+        
         # place created spreadsheet into folder
         kovaakFolder.moveFileHere(kovaakGoogleSheet.get('ID'))
 
