@@ -1,6 +1,7 @@
 *.csv
 token.pickle
 credentials.json
+data/*
 
 __pychache__/
 

@@ -4,9 +4,8 @@ import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from gservice import gService
+from myG.gservice import gService
 import logging
-from gservice import gService
 import csv
 logging.basicConfig(level=logging.ERROR)
 

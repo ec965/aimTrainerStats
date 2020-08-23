@@ -58,35 +58,46 @@ class Challenges:
     def initChallenges(self, directory:str, playlist:Set={})->Dict[str, List[Challenge]]:
         #create an empty dictionary to store challenges in
         challenges = {}
-        checkedData = [] #list to record file names of checked data
+
+        #use a Set to load file names of checked data
+        checkedData = set([])
+        if os.path.exists(f"data/{self.__title}-checkedData.csv") :
+            with open(f"data/{self.__title}-checkedData.csv", newline='') as csvfile:
+                reader = csv.reader(csvfile, delimiter=',')
+                for row in reader:
+                    checkedData.add(row[0])
+        
+        #use a set to record names of new data
+        newData = set([])
         for filename in os.listdir(directory):
-            if filename.endswith(".csv") :
-                #trim ' Stats.csv' suffix
-                #split pieces of the name by the delimiter
-                namePieces = filename[0:-10].split(' - ')
-                namePieces[0] = namePieces[0].lstrip()#remove forward spaces
-                namePieces[0] = namePieces[0].rstrip() #remove trailing spaces
+            if filename.endswith(".csv"):
+                if (filename not in checkedData) :
+                    #trim ' Stats.csv' suffix
+                    #split pieces of the name by the delimiter
+                    namePieces = filename[0:-10].split(' - ')
+                    namePieces[0] = namePieces[0].lstrip()#remove forward spaces
+                    namePieces[0] = namePieces[0].rstrip() #remove trailing spaces
 
-                if (len(playlist)==0) or (namePieces[0] in playlist):
+                    if (len(playlist)==0) or (namePieces[0] in playlist):
+                        print('processing: ',filename)
+                        #split the time based on the delimiter
+                        timePieces = namePieces[-1].split('-')
+                        timePieces[0] = timePieces[0].replace('.', '/')
+                        timePieces[1] = timePieces[1].replace('.', ':')
 
-                    #split the time based on the delimiter
-                    timePieces = namePieces[-1].split('-')
-                    timePieces[0] = timePieces[0].replace('.', '/')
-                    timePieces[1] = timePieces[1].replace('.', ':')
+                        challenge = Challenge(os.path.join(directory, filename), namePieces[0], timePieces[0], timePieces[1])
 
-                    challenge = Challenge(os.path.join(directory, filename), namePieces[0], timePieces[0], timePieces[1])
-
-                    if namePieces[0] not in challenges :
-                        challenges[namePieces[0]] = []
-                    challenges[namePieces[0]].append(challenge)
-                    checkedData.append(filename) #record file names of checked data
+                        if namePieces[0] not in challenges :
+                            challenges[namePieces[0]] = []
+                        challenges[namePieces[0]].append(challenge)
+                        newData.add(filename) #record file names of checked data
             else:
                 continue
         #record that the challenge data has been processed into a local csv
         #this is important for updating tables later
         with open(f"data/{self.__title}-checkedData.csv", 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
-            for data in checkedData :
+            for data in newData :
                 writer.writerow([data])
 
         return challenges

@@ -1,7 +1,7 @@
 import re
 import string
 import os
-from typing import Dict, List
+from typing import OrderedDict, List
 
 # current errors:
 # )% as leading chars
@@ -30,7 +30,7 @@ def findMatchingBracket(s:str)->bool:
     return False
 
 #generates a dictionary of {title:challenges} for each playlist
-def getPlaylists(directory:str)->Dict[str, List[str]]:
+def getPlaylists(directory:str)->OrderedDict[str, List[str]]:
     playlist = {}
     for file in os.listdir(directory):
         with open(f"{directory}/{file}",'r', errors='ignore') as file:

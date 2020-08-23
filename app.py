@@ -1,9 +1,10 @@
-import challenges as Ch
-from gsheet import ChallengeSheet
+import kovaak.challenges as Ch
+from challengeSheet import ChallengeSheet
 from sys import platform
 import logging
-from gservice import gService
-from gdrive import gFolder, findFile
+from myG.gservice import gService
+from myG.gdrive import gFolder, findFile
+import kovaak.playlist
 
 logging.basicConfig(level=logging.WARNING)
 logging.propagate = False
@@ -13,21 +14,46 @@ logging.propagate = False
 # Spreadsheet title
 
 def main ():
+    folderName = 'FPS Aim Trainer Stats'
     #use an arg for the steam library path
     # steamLibPath = 'C:/Program Files (x86)/Steam'
     #change path based on OS; maybe put this into args later
     logging.warning('current OS: ', platform)
     if platform == "linux" or platform =="linux2":
-        steamLib = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
+        steamLibStats = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
+        steamLibPlaylist = '/mnt/c/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
     elif platform == "win32":
-        steamLib = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
+        steamLibStats = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/stats'
+        steamLibPlaylist = 'C:/Program Files (x86)/Steam/steamapps/common/FPSAimTrainer/FPSAimTrainer/Saved/SaveGames/Playlists'
 
-    folderName = 'FPS Aim Trainer Stats'
-    # dictionary { str: {Set}}
-    playLists = {
-        'Flicks' : {'Tile Frenzy', 'Tile Frenzy Mini', '1wall6targets TE', '1wall 6targets small', 'Valorant Microshot Speed Small 60s', 'Valorant Reflex Flick'},
-        'Tracking': {'patTargetSwitch', 'Midrange Long Strafes Invincible', 'Cata IC Long Strafes', 'Cata IC Fast Strafes', '1wall5targets_pasu', 'patTargetSwitch V2'}
-    }
+
+    # get the playlists from the kovaak's game folder
+    playlists = kovaak.playlist.getPlaylists(steamLibPlaylist)
+    for i,pl in enumerate(playlists) :
+        print(f"{i}. {pl}\t{playlists[pl]}")
+    # get the useres input on which playlists to use 
+    print('\nType the number of the playlist that you want to use to generate a google sheet.\nMultiple palylists can be selected, please seperate using a comma.\nExample: 0,1,13')
+    selection = input()
+    selection = selection.split(',')
+
+    inputPlaylists = {}
+    for n in selection :
+        n = int(n)
+        indexedPlaylist = list(playlists.items())[n]
+        inputPlaylists[indexedPlaylist[0]] = indexedPlaylist[1]
+
+    print('Selected Playlist(s): ')
+    for pl in inputPlaylists :
+        print(f"{pl}: {inputPlaylists[pl]}")
+
+
+    print('Would you like to start creating the google spreadsheet(s)? y/n')
+    makeSheets = input()
+    if not (makeSheets == 'y' or makeSheets == 'Y') :
+        print('Existing App')
+        return
+
+
 
     # create the service for google drive and google sheet
     googleService = gService()
@@ -37,9 +63,9 @@ def main ():
 
 
     # create spreadsheets for each playlist
-    for title, playlist in playLists.items() :
+    for title, playlist in inputPlaylists.items() :
         # get the kovaak's data for the specific playlist from the steam library
-        kovaakData = Ch.Challenges(steamLib, title, playlist)
+        kovaakData = Ch.Challenges(steamLibStats, title, playlist)
 
         # create the spreadsheet for the playlist
         kovaakGoogleSheet = ChallengeSheet(googleService.get('sheet'), googleService.get('drive'), title, kovaakData.getData())
