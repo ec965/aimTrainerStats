@@ -30,7 +30,7 @@ def findFile(driveService, fileName:str, fileID:str)->bool:
 class gFolder:
     # service should be the google drive service
     def __init__(self, service, folderName):
-        self.csvName = 'gdrivedata.csv'
+        self.csvName = 'data/gdrivedata.csv'
         self.service = service
         self.folderName = folderName
         self.ID = self.getID(folderName)

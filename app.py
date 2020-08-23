@@ -48,16 +48,11 @@ def main ():
         for index, (key, value) in enumerate(kovaakGoogleSheet.challenges.items()):
             kovaakGoogleSheet.createSheet(index, key, value)
 
-            break #remove after testing
-
         # execute requests to generate the sheets
         kovaakGoogleSheet.sendRequests()
 
         # place created spreadsheet into folder
         kovaakFolder.moveFileHere(kovaakGoogleSheet.ID)
-
-        break # for testing so we only generate one spreadsheet
-
 
 if __name__=="__main__":
     main()

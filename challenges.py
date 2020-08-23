@@ -49,9 +49,9 @@ class Challenge :
         print('sens: ', self.sens)
 
 class Challenges:
-    def __init__(self, directory, title:str, playlist:Set={}):
-        self.__data = self.initChallenges(directory, playlist)
+    def __init__(self, directory, title:str="allData", playlist:Set={}):
         self.__title = title
+        self.__data = self.initChallenges(directory, playlist)
     def getData(self):
         return self.__data
     # User has option to specify playlist, if no playlist is specified, all data will be loaded
@@ -83,7 +83,8 @@ class Challenges:
             else:
                 continue
         #record that the challenge data has been processed into a local csv
-        with open(f"{self.__title}checkedData.csv", 'a', newline='') as csvfile:
+        #this is important for updating tables later
+        with open(f"data/{self.__title}-checkedData.csv", 'a', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             for data in checkedData :
                 writer.writerow([data])
@@ -102,7 +103,12 @@ if __name__ == "__main__" :
     elif platform == "win32":
         statsDir = 'C:\Program Files (x86)\Steam\steamapps\common\FPSAimTrainer\FPSAimTrainer\stats'
 
-    ch = Challenges(statsDir)
+    ch = Challenges(directory=statsDir)
+    
+    data = ch.getData()
 
-    for key, value in ch.challengeDict.items():
-        print(key, '\n', value)
+    for key in data:
+        print(f"key: {key}")
+        print("values: ")
+        for v in data[key]:
+            v.printVars()

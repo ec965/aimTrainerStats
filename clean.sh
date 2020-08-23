@@ -1,1 +1,1 @@
-rm *.csv 
+rm *.csv data/*.csv 

@@ -21,7 +21,7 @@ logging.propagate = False
 
 class gSheet:
     def __init__(self, service, driveService, title:str):
-        self.csvName = 'gdrivedata.csv'
+        self.csvName = 'data/gdrivedata.csv'
         self.title = title
         self.service = service #service that has the auth keys etc.
         self.ID = self.getID(driveService) #spreadsheetId
@@ -360,7 +360,7 @@ class ChallengeSheet(gSheet):
         })
 
     
-    def updateSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
+    # def updateSheet(self, sheetIndex:int, title:str, challenges:List[Challenge]):
 
 
 
