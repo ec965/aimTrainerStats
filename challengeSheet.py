@@ -72,7 +72,24 @@ class ChallengeSheet(myG.gsheet.gSheet):
                                                             valueInputOption='USER_ENTERED',
                                                             body=body).execute()
         print(result)
-
+    
+    def sortValues(self, sheetTitle:str):
+        sheetId = self.myHash(sheetTitle)        
+        self.__spreadsheetRequests.append({
+            "sortRange":{
+                'range':{
+                    'sheetId': sheetId,
+                    'startRowIndex': 0,
+                    'startColumnIndex':0,
+                    'endColumnIndex': 1
+                },
+                'sortSpecs': [
+                    {
+                        'sortOrder': 'ASCENDING',
+                    }
+                ]
+            }
+        })
 
     # this should take in a dictionary key value pair.
     # the key is the title while the value is a list of challenges
@@ -96,7 +113,7 @@ class ChallengeSheet(myG.gsheet.gSheet):
 
         for challenge in challenges :
             values.append([
-                challenge.get('date')+'-'+challenge.get('time'),
+                challenge.get('date')+' '+challenge.get('time'),
                 challenge.get('name'),
                 challenge.get('score'),
                 challenge.get('accuracy'),
@@ -208,7 +225,8 @@ class ChallengeSheet(myG.gsheet.gSheet):
                                 'sheetId': sheetId,
                                 'rowIndex': 40,
                                 'columnIndex': chartOffset
-                            }
+                            },
+                            'widthPixels': 800,
                         }
                     }
 
@@ -274,7 +292,8 @@ class ChallengeSheet(myG.gsheet.gSheet):
                                 'sheetId': sheetId,
                                 'rowIndex': 0,
                                 'columnIndex': chartOffset
-                            }
+                            },
+                            'widthPixels': 800,
                         }
                     }
 
@@ -340,7 +359,8 @@ class ChallengeSheet(myG.gsheet.gSheet):
                                 'sheetId': sheetId,
                                 'rowIndex': 20,
                                 'columnIndex': chartOffset
-                            }
+                            },
+                            'widthPixels': 800,
                         }
                     }
 

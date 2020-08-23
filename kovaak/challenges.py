@@ -91,9 +91,8 @@ class Challenges:
                 if (filename not in checkedData) :
                     #trim ' Stats.csv' suffix
                     #split pieces of the name by the delimiter
-                    namePieces = filename[0:-10].split(' - ')
-                    namePieces[0] = namePieces[0].lstrip()#remove forward spaces
-                    namePieces[0] = namePieces[0].rstrip() #remove trailing spaces
+                    namePieces = filename[0:-10].split(' - Challenge - ')
+                    namePieces[0] = namePieces[0].strip()#remove forward and trailing spaces
 
                     if (len(playlist)==0) or (namePieces[0] in playlist):
                         print('processing: ',filename)
