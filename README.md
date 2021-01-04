@@ -3,13 +3,13 @@ Play Kovaak's Aim Trainer? Want your data in google sheets? say no more...
 
 ## Usage
 Requirements:
-  * python (preferably python 3.8 and above).
+  * python3 (3.8 and above).
   * Requires familiarity creating a google cloud project.
   * Requires game data from Kovaak's FPS Aim Trainer (steam/windows)
 
 1. Create a google cloud project and enable the drive and sheets API.
 2. Generate the credentials.json for the google cloud project and put it into the root folder of this project.
-3. Run the app using `python3 app.py` or `python app.py`.
+3. Run the app using `python3 app.py`.
 4. Select the playlists that you want to create google sheets for. Each sheet will include graphs of accuracy and score performance.
 
 WARNING: If .csv files are deleted from `./data/` some functionality will break. It is advised to delete all related sheets and folders from your google drive if this occurs as well as all local .csv files in `./data/`.
